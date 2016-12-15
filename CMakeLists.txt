@@ -4,6 +4,8 @@ find_package (Threads)
 find_library (OPENCL_LIBRARIES OpenCL)
 project (clcontext)
 
+set(CMAKE_INSTALL_PREFIX "/usr")
+
 file(GLOB SRC *.c)
 set (SOURCES ${SRC})
 

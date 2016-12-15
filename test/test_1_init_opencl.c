@@ -116,7 +116,7 @@ static void test_run_hello_n(void) {
 }
 static void test_run_hello_l(void) {
 	size_t mem_size = 128;
-	size_t global_work_size[] = (size_t []){2, 4}, local_work_size[] = (size_t []){1, 2};
+	size_t global_work_size[] = (size_t []){1}, local_work_size[] = (size_t []){1};
 	char string[mem_size];
 	cl_int ret;
 
@@ -133,14 +133,12 @@ static void test_run_hello_l(void) {
 	init_cl(ctx);
 
 	int i=0;
-	//ret = clEnqueueWriteBuffer(ctx.clcmdq[0], ctx.buffers[0][1], CL_TRUE, 0, sizeof(int), &i, 0, NULL, NULL);
 	cl_event ev[13];
-	fprintf(stderr, "\nI GOT TO A KERNEL\n");
-	ret=clEnqueueNDRangeKernel(ctx->clcmdq[0], ctx->clkernel[0][0], 2, NULL, global_work_size, local_work_size, 0, NULL,&(ev[i]));
+	ret=clEnqueueNDRangeKernel(ctx->clcmdq[0], ctx->clkernel[0][0], 1, NULL, global_work_size, local_work_size, 0, NULL,&(ev[i]));
 	if(ret != CL_SUCCESS) { CU_FAIL("couldn't run kernel ");}
 
-	for(i=1; i<3; i++) {
-		ret=clEnqueueNDRangeKernel(ctx->clcmdq[0], ctx->clkernel[0][0], 2, NULL, global_work_size, local_work_size, 1, &(ev[i-1]),&(ev[i]));
+	for(i=1; i<13; i++) {
+		ret=clEnqueueNDRangeKernel(ctx->clcmdq[0], ctx->clkernel[0][0], 1, NULL, global_work_size, local_work_size, 1, &(ev[i-1]),&(ev[i]));
 		if(ret != CL_SUCCESS) { CU_FAIL("couldn't run kernel ");}
 	}
 
@@ -149,46 +147,6 @@ static void test_run_hello_l(void) {
 	CU_ASSERT_STRING_EQUAL(string, "Hello, World!");
 	puts(string);
 }
-/*
-static void test_run_hello_l(void) {
-	size_t mem_size = 128;
-	size_t global_work_size = 2, local_work_size = 1;
-	char string[mem_size];
-	cl_int ret;
-
-	CLContext ctx = {
-		.kernel = &(KernelInfo) {
-			.src = (unsigned char*[]){ hello_n_l_cl},
-			.size = (size_t []){ hello_n_l_cl_len },
-			.names = (const char *[]){"hello"},
-			.buffer = (BufferInfo []){
-				{sizeof(string), CL_MEM_READ_WRITE},
-				{sizeof(int), CL_MEM_READ_WRITE, 1}
-			},
-			.num_src = 1,
-			.num_kernels = 1,
-			.num_buffers = 2
-		}
-	};
-	init_cl(&ctx);
-
-	int i=0;
-	//ret = clEnqueueWriteBuffer(ctx.clcmdq[0], ctx.buffers[0][1], CL_TRUE, 0, sizeof(int), &i, 0, NULL, NULL);
-	cl_event ev[13];
-	ret=clEnqueueNDRangeKernel(ctx.clcmdq[0], ctx.clkernel[0][0], 1, NULL, &global_work_size, &local_work_size, 0, NULL,&(ev[i]));
-	if(ret != CL_SUCCESS) { CU_FAIL("couldn't run kernel ");}
-	for(i=1; i<13; i++) {
-		ret=clEnqueueNDRangeKernel(ctx.clcmdq[0], ctx.clkernel[0][0], 1, NULL, &global_work_size, &local_work_size, 1, &(ev[i-1]),&(ev[i]));
-		if(ret != CL_SUCCESS) { CU_FAIL("couldn't run kernel ");}
-	}
-
-	ret = clEnqueueReadBuffer(ctx.clcmdq[0], ctx.buffers[0][0], CL_TRUE, 0, mem_size * sizeof(char),string, 1, &(ev[i-1]), NULL);
-
-	CU_ASSERT_STRING_EQUAL(string, "Hello, World!");
-	puts(string);
-	finalize_cl(&ctx);
-}
-*/
 static CU_TestInfo tests[] = {
 	{"Test Init CL Platforms", test_init_cl},
 	{"Test Init CL Kernels", test_init_kernel},

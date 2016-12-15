@@ -4,7 +4,7 @@
 #include "hello_n.cl.h"
 #include "hello_n_l.cl.h"
 #include "hello.h.h"
-#include "../src/clcontext.h"
+#include "../clcontext.h"
 
 #include "BCUnit/BCUnit.h"
 #include "BCUnit/Basic.h"

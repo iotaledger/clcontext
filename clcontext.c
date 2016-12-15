@@ -108,7 +108,7 @@ static void kernel_init_buffers (CLContext *ctx) {
 			ctx->buffers[i][j] = clCreateBuffer(ctx->clctx[i], ctx->kernel.buffer[j].flags, ctx->kernel.buffer[j].size, NULL, &errno);
 			for(k=0;k< ctx->kernel.num_kernels;k++) {
 				if(ctx->kernel.buffer[j].local > 0) {
-					fprintf(stderr, "\nI: Kernel Local Variable found on, d%d-k%d-b%d",i,k,j);
+					//fprintf(stderr, "\nI: Kernel Local Variable found on, d%d-k%d-b%d",i,k,j);
 					errno = clSetKernelArg(ctx->clkernel[i][k], j, sizeof(cl_mem), NULL);
 				} else {
 					errno = clSetKernelArg(ctx->clkernel[i][k], j, sizeof(cl_mem),(void *)&(ctx->buffers[i][j]));

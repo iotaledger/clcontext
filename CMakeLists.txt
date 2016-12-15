@@ -24,12 +24,13 @@ set_target_properties (${LIBRARY_NAME} PROPERTIES
 #target_include_directories (curl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS ${LIBRARY_NAME} 
-	LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/lib/${LIBRARY_NAME}
-	ARCHIVE DESTINATION ${PROJECT_BINARY_DIR}/lib/${LIBRARY_NAME})
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION bin)
 
 # Install library headers
 file(GLOB HEADERS *.h)
-install(FILES ${HEADERS} DESTINATION ${PROJECT_BINARY_DIR}/include/${LIBRARY_NAME})
+install(FILES ${HEADERS} DESTINATION include)
 
 #enable_testing()
 #add_subdirectory (test)

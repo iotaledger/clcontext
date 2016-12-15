@@ -31,5 +31,5 @@ install(TARGETS ${LIBRARY_NAME}
 file(GLOB HEADERS *.h)
 install(FILES ${HEADERS} DESTINATION ${PROJECT_BINARY_DIR}/include/${LIBRARY_NAME})
 
-#enable_testing()
-#add_subdirectory (test)
+enable_testing()
+add_subdirectory (test)

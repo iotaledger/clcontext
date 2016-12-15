@@ -32,25 +32,18 @@ static void teardown_cl_test(void) {
 	destroy_cl(ctx);
 }
 
-static void test_init_cl(void) {
-	init_cl(ctx);
-	CU_ASSERT(ctx->num_devices > 0);
-}
-
 static void test_init_kernel(void) {
 	size_t mem_size = 128;
 
-	ctx->kernel.src = (unsigned char*[]){ hello_h,hello_cl};
-	ctx->kernel.size = (size_t []){ hello_h_len, hello_cl_len };
-	ctx->kernel.names = (char *[]){"hello"};
-	ctx->kernel.buffer = (BufferInfo []){
-		{sizeof(char)* mem_size, CL_MEM_READ_WRITE}
-	};
+	unsigned char *src[] = (unsigned char*[]){ hello_h,hello_cl};
+	size_t size[] = (size_t []){ hello_h_len, hello_cl_len };
+	char *names[] = (char *[]){"hello"};
+	ctx->kernel.buffer[0] = (BufferInfo ){sizeof(char)* mem_size, CL_MEM_READ_WRITE};
 	ctx->kernel.num_src = 2;
 	ctx->kernel.num_kernels = 1;
 	ctx->kernel.num_buffers = 1;
 
-	init_cl(ctx);
+	pd_init_cl(ctx, src, size, names);
 }
 
 static void test_run_hello_kernel(void) {
@@ -58,16 +51,14 @@ static void test_run_hello_kernel(void) {
 	char string[mem_size];
 	cl_int ret;
 
-	ctx->kernel.src = (unsigned char*[]){ hello_h,hello_cl};
-	ctx->kernel.size = (size_t []){ hello_h_len, hello_cl_len };
-	ctx->kernel.names = (char *[]){"hello", "world"};
-	ctx->kernel.buffer = (BufferInfo []){
-		{sizeof(string), CL_MEM_READ_WRITE}
-	};
+	unsigned char *src[] = (unsigned char*[]){ hello_h,hello_cl};
+	size_t size[] = (size_t []){ hello_h_len, hello_cl_len };
+	char *names[] = (char *[]){"hello", "world"};
+	ctx->kernel.buffer[0] = (BufferInfo){sizeof(string), CL_MEM_READ_WRITE};
 	ctx->kernel.num_src = 2;
 	ctx->kernel.num_kernels = 2;
 	ctx->kernel.num_buffers = 1;
-	init_cl(ctx);
+	pd_init_cl(ctx, src, size, names);
 
 	/* this is what I was missing. */
 
@@ -94,16 +85,14 @@ static void test_run_hello_n(void) {
 	char string[mem_size];
 	cl_int ret;
 
-	ctx->kernel.src = (unsigned char*[]){ hello_n_cl};
-	ctx->kernel.size = (size_t []){ hello_n_cl_len };
-	ctx->kernel.names = (char *[]){"hello"};
-	ctx->kernel.buffer = (BufferInfo []){
-		{sizeof(string), CL_MEM_READ_WRITE}
-	},
-		ctx->kernel.num_src = 1;
+	unsigned char *src[] = (unsigned char*[]){ hello_n_cl};
+	size_t size[] = (size_t []){ hello_n_cl_len };
+	char *names[] = (char *[]){"hello"};
+	ctx->kernel.buffer[0] = (BufferInfo){sizeof(string), CL_MEM_READ_WRITE};
+	ctx->kernel.num_src = 1;
 	ctx->kernel.num_kernels = 1;
 	ctx->kernel.num_buffers = 1;
-	init_cl(ctx);
+	pd_init_cl(ctx, src, size, names);
 
 	cl_event ev;
 	ret = clEnqueueNDRangeKernel (ctx->clcmdq[0], ctx->clkernel[0][0], 1, NULL, &global_work_size, &local_work_size, 0, NULL,&ev);
@@ -120,17 +109,15 @@ static void test_run_hello_l(void) {
 	char string[mem_size];
 	cl_int ret;
 
-	ctx->kernel.src = (unsigned char*[]){ hello_n_l_cl};
-	ctx->kernel.size = (size_t []){ hello_n_l_cl_len };
-	ctx->kernel.names = (char *[]){"hello"};
+	unsigned char *src[] = (unsigned char*[]){ hello_n_l_cl};
+	size_t size[] = (size_t []){ hello_n_l_cl_len };
+	char *names[] = (char *[]){"hello"};
 	ctx->kernel.num_src = 1;
 	ctx->kernel.num_kernels = 1;
 	ctx->kernel.num_buffers = 2;
-	ctx->kernel.buffer = (BufferInfo []){
-		{sizeof(string), CL_MEM_READ_WRITE},
-		{sizeof(int), CL_MEM_READ_WRITE, 1 }
-	};
-	init_cl(ctx);
+	ctx->kernel.buffer[0] = (BufferInfo){sizeof(string), CL_MEM_READ_WRITE};
+	ctx->kernel.buffer[1] = (BufferInfo){sizeof(int), CL_MEM_READ_WRITE, 1 };
+	pd_init_cl(ctx, src, size, names);
 
 	int i=0;
 	cl_event ev[13];
@@ -148,7 +135,6 @@ static void test_run_hello_l(void) {
 	puts(string);
 }
 static CU_TestInfo tests[] = {
-	{"Test Init CL Platforms", test_init_cl},
 	{"Test Init CL Kernels", test_init_kernel},
 	{"Test Run Hello Kernel", test_run_hello_kernel},
 	{"Test Run Hello N Kernels", test_run_hello_n},

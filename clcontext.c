@@ -6,9 +6,6 @@
 #define DEBUG
 */
 
-static void kernel_init_buffers (CLContext *ctx);
-static void create_kernel (CLContext *ctx);
-static void get_devices(CLContext *ctx);
 
 static void pfn_notify(const char *errinfo, const void *private_info, size_t cb, void *user_data){
 	fprintf(stderr, "W: caught an error in ocl_pfn_notify:\nW: %s", errinfo);
@@ -24,7 +21,7 @@ static void check_clerror(cl_int err, char *comment, ...) {
 	exit(1);
 }
 
-static void get_devices(CLContext *ctx) {
+static void get_devices(CLContext *ctx, unsigned char **src, size_t *size) {
 	/* List devices for each platforms.*/ 
 	cl_uint num_platforms;
 	ctx->num_devices = 0;
@@ -71,7 +68,7 @@ static void get_devices(CLContext *ctx) {
 	if(ctx->kernel.num_src == 0) return;
 	for(size_t i=0; i< ctx->num_devices; i++) {
 		cl_int errno;
-		ctx->programs[i] = clCreateProgramWithSource(ctx->clctx[i], ctx->kernel.num_src, (const char **)ctx->kernel.src, ctx->kernel.size, &errno);
+		ctx->programs[i] = clCreateProgramWithSource(ctx->clctx[i], ctx->kernel.num_src, (const char**)src, size, &errno);
 		check_clerror(errno, "Failed to execute clCreateProgramWithSource");
 	}
 
@@ -87,13 +84,13 @@ static void get_devices(CLContext *ctx) {
 	}
 }
 
-static void create_kernel (CLContext *ctx) {
+static void create_kernel (CLContext *ctx,char **names) {
 	// Create kernel.
 	size_t i, j;
 	for(i=0; i< ctx->num_devices; i++) {
 		for(j=0;j< ctx->kernel.num_kernels; j++) {
 			cl_int errno;
-			ctx->clkernel[i][j] = clCreateKernel(ctx->programs[i], ctx->kernel.names[j], &errno);
+			ctx->clkernel[i][j] = clCreateKernel(ctx->programs[i], names[j], &errno);
 			check_clerror(errno, "Failed to execute clCreateKernel");
 		}
 	}
@@ -103,12 +100,10 @@ static void kernel_init_buffers (CLContext *ctx) {
 	int i, j, k;
 	for(i=0; i< ctx->num_devices; i++) {
 		cl_int errno;
-
 		for(j=0;j< ctx->kernel.num_buffers;j++) {
 			ctx->buffers[i][j] = clCreateBuffer(ctx->clctx[i], ctx->kernel.buffer[j].flags, ctx->kernel.buffer[j].size, NULL, &errno);
 			for(k=0;k< ctx->kernel.num_kernels;k++) {
 				if(ctx->kernel.buffer[j].local > 0) {
-					//fprintf(stderr, "\nI: Kernel Local Variable found on, d%d-k%d-b%d",i,k,j);
 					errno = clSetKernelArg(ctx->clkernel[i][k], j, sizeof(cl_mem), NULL);
 				} else {
 					errno = clSetKernelArg(ctx->clkernel[i][k], j, sizeof(cl_mem),(void *)&(ctx->buffers[i][j]));
@@ -119,75 +114,23 @@ static void kernel_init_buffers (CLContext *ctx) {
 	}
 }
 
-void write_buffers(CLContext *ctx, size_t device, size_t num_buffers, BufferVal *args) {
-	size_t i;
-	for(i=0; i < num_buffers; i++) {
-		clEnqueueWriteBuffer(ctx->clcmdq[device], ctx->buffers[device][args[i].index], 
-				args[i].blocking, args[i].offset, args[i].size, args[i].val, args[i].num_wl, args[i].wl, args[i].ev);
-	}
-}
-void read_buffers(CLContext *ctx, size_t device, size_t num_buffers, BufferVal *args) {
-	size_t i;
-	for(i=0; i < num_buffers; i++) {
-		clEnqueueReadBuffer(ctx->clcmdq[device], ctx->buffers[device][args[i].index], 
-				args[i].blocking, args[i].offset, args[i].size, args[i].val, args[i].num_wl, args[i].wl, args[i].ev);
-	}
-}
 
-void run_kernel(CLContext *ctx, size_t device, size_t num_kernels, KernelVal *args) {
-		cl_int errno;
-		size_t i;
-		for(i = 0; i < num_kernels; i++) {
-			errno = clEnqueueNDRangeKernel (ctx->clcmdq[device], 
-					ctx->clkernel[device][args[i].index], args[i].dimensions, 
-					args[i].global_offset, args[i].global_size, args[i].local_size, args[i].num_wl,
-					args[i].wl, args[i].ev);
-			//fprintf(stderr, "\nE: Invalid kernel on device %zu kernel %zu\n", device, args[i].index);
-			if(errno == CL_INVALID_KERNEL)
-				check_clerror(errno, "Failed to execute clEnqueueNDRangeKernel. Dev:%zu, Index: \n", device, args[i].index);
-
-		}
-}
-
-int init_kernel(CLContext *ctx) {
-	create_kernel(ctx);
+int init_kernel(CLContext *ctx, char **names) {
+	create_kernel(ctx, names);
 	kernel_init_buffers(ctx);
 	return 0;
 }
 
-void init_cl(CLContext *ctx) {
+
+void pd_init_cl(CLContext *ctx, unsigned char **src, size_t *size,char **names){
 	if(!ctx) {
 		ctx = malloc(sizeof(CLContext));
 	}
-	get_devices(ctx);
-	init_kernel(ctx);
+	get_devices(ctx, src, size);
+	init_kernel(ctx, names);
 }
 
 void destroy_cl(CLContext *ctx) {
-	/*
-	free(&(ctx->kernel));
-	free(ctx->kernel.src);
-	free(ctx->kernel.size);
-	free(ctx->kernel.names);
-	free(ctx->kernel.buffer);
-	free(ctx->kernel.src);
-	free(ctx->kernel.size);
-	free(ctx->kernel.names);
-	free(ctx->kernel.buffer);
-	free(ctx->clcmdq);
-	cl_mem buffers[CLCONTEXT_MAX_DEVICES][MAX_BUFFERS];
-	cl_kernel clkernel[CLCONTEXT_MAX_DEVICES][MAX_KERNELS];
-	cl_program programs[CLCONTEXT_MAX_DEVICES];
-	cl_context clctx[CLCONTEXT_MAX_DEVICES];
-	KernelInfo kernel;
-	unsigned char **src;
-	const size_t *size;
-	char ** names;
-	BufferInfo *buffer;
-	size_t num_buffers;
-	size_t num_kernels;
-	size_t num_src;
-	*/
 }
 
 void finalize_cl(CLContext *ctx) {

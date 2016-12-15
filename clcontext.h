@@ -19,38 +19,13 @@ enum cl_flag_t {
 };
 
 typedef struct {
-	size_t index;
-	cl_bool blocking;
-	size_t offset;
-	size_t size;
-	void *val;
-	cl_uint num_wl;
-	const cl_event *wl;
-	cl_event *ev;
-} BufferVal;
-
-typedef struct {
-	size_t index;
-	size_t dimensions;
-	const size_t *global_offset;
-	const size_t *global_size;
-	const size_t *local_size;
-	cl_uint num_wl;
-	const cl_event *wl;
-	cl_event *ev;
-} KernelVal;
-
-typedef struct {
 	size_t size;
 	cl_mem_flags flags;
 	int local;
 } BufferInfo;
 
 typedef struct {
-	unsigned char **src;
-	size_t *size;
-	char ** names;
-	BufferInfo *buffer;
+	BufferInfo buffer[MAX_BUFFERS];
 	size_t num_buffers;
 	size_t num_kernels;
 	size_t num_src;
@@ -58,7 +33,6 @@ typedef struct {
 
 typedef struct {
 	cl_uint num_devices;
-	cl_uint num_programs;
 	cl_command_queue clcmdq[CLCONTEXT_MAX_DEVICES];
 	cl_mem buffers[CLCONTEXT_MAX_DEVICES][MAX_BUFFERS];
 	cl_kernel clkernel[CLCONTEXT_MAX_DEVICES][MAX_KERNELS];
@@ -70,11 +44,11 @@ typedef struct {
 
 
 void init_cl(CLContext *ctx);
-int init_kernel(CLContext *ctx);
+//void pd_init_cl(CLContext *ctx, unsigned char *const *src, size_t *size,const char **names);
+void pd_init_cl(CLContext *ctx, unsigned char **src, size_t *size,char **names);
+//void pd_init_cl(CLContext *ctx, const char **src, size_t *size,const char **names) ;
+//int init_kernel(CLContext *ctx, char **names) ;
 void destroy_cl(CLContext *ctx);
 void finalize_cl(CLContext *ctx);
-void write_buffers(CLContext *ctx, size_t device, size_t num_buffers, BufferVal *args);
-void read_buffers(CLContext *ctx, size_t device, size_t num_buffers, BufferVal *args);
-void run_kernel(CLContext *ctx, size_t device, size_t index, KernelVal *args);
 
 #endif

@@ -1,0 +1,21 @@
+SET(RESOURCE_COMPILER xxd)
+FILE(GLOB COMPILED_RESOURCES "cl/*")
+FOREACH(INPUT_FILE ${COMPILED_RESOURCES})
+	get_filename_component(INPUT_NAME ${INPUT_FILE} NAME)
+	get_filename_component(INPUT_PATH ${INPUT_FILE} DIRECTORY)
+	SET(OUTPUT_FILE ${INPUT_PATH}/../${INPUT_NAME}.h)
+	ADD_CUSTOM_COMMAND(
+		OUTPUT ${OUTPUT_FILE}
+		COMMAND ${RESOURCE_COMPILER} -i ${INPUT_NAME} ${OUTPUT_FILE}
+		WORKING_DIRECTORY ${INPUT_PATH}
+		)
+	LIST(APPEND COMPILED_RESOURCES ${OUTPUT_FILE})
+ENDFOREACH()
+
+file(GLOB TESTS ./*.c acunit/test.c)
+add_executable (test_suite ${SOURCES} ${TESTS} ${COMPILED_RESOURCES})
+set_target_properties (test_suite PROPERTIES LINK_FLAGS -Wl,-lbcunit,-lpthread)
+target_link_libraries(test_suite ${OPENCL_LIBRARIES})
+#LDLIBS = -lOpenCL
+
+add_test (test_suite ${EXECUTABLE_OUTPUT_PATH}/test_suite)

@@ -50,5 +50,6 @@ void pd_init_cl(CLContext *ctx, unsigned char **src, size_t *size,char **names);
 //int init_kernel(CLContext *ctx, char **names) ;
 void destroy_cl(CLContext *ctx);
 void finalize_cl(CLContext *ctx);
+void check_clerror(cl_int err, char *comment, ...);
 
 #endif

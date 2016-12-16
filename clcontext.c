@@ -10,7 +10,7 @@
 static void pfn_notify(const char *errinfo, const void *private_info, size_t cb, void *user_data){
 	fprintf(stderr, "W: caught an error in ocl_pfn_notify:\nW: %s", errinfo);
 }
-static void check_clerror(cl_int err, char *comment, ...) {
+void check_clerror(cl_int err, char *comment, ...) {
 	if(err == CL_SUCCESS) {
 		return;
 	}
